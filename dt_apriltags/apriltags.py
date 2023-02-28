@@ -125,13 +125,6 @@ def _ptr_to_array2d(datatype, ptr, rows, cols):
     return numpy.ctypeslib.as_array(array_buf, shape=(rows, cols))
 
 
-def _image_u8_get_array(img_ptr):
-    return _ptr_to_array2d(ctypes.c_uint8,
-                           img_ptr.contents.buf.contents,
-                           img_ptr.contents.height,
-                           img_ptr.contents.stride)
-
-
 def _matd_get_array(mat_ptr):
     return _ptr_to_array2d(ctypes.c_double,
                            mat_ptr.contents.data,
@@ -256,50 +249,66 @@ class Detector(object):
         if self.libc is None:
             raise RuntimeError('could not find DLL named ' + filename)
 
-        # create the c-_apriltag_detector object
+        # Set restypes
+        self.libc.apriltag_detections_destroy.restype = None
+        self.libc.apriltag_detector_add_family_bits.restype = None
         self.libc.apriltag_detector_create.restype = ctypes.POINTER(_ApriltagDetector)
+        self.libc.apriltag_detector_destroy.restype = None
+        self.libc.apriltag_detector_detect.restype = ctypes.POINTER(_ZArray)
+        self.libc.estimate_tag_pose.restype = ctypes.c_double
+        self.libc.matd_destroy.restype = None
+        self.libc.matd_destroy.restype = None
+        self.libc.tag16h5_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tag16h5_destroy.restype = None
+        self.libc.tag25h9_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tag25h9_destroy.restype = None
+        self.libc.tag36h11_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tag36h11_destroy.restype = None
+        self.libc.tagCircle21h7_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tagCircle21h7_destroy.restype = None
+        self.libc.tagCircle49h12_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tagCircle49h12_destroy.restype = None
+        self.libc.tagCustom48h12_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tagCustom48h12_destroy.restype = None
+        self.libc.tagStandard41h12_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tagStandard41h12_destroy.restype = None
+        self.libc.tagStandard52h13_create.restype = ctypes.POINTER(_ApriltagFamily)
+        self.libc.tagStandard52h13_destroy.restype = None
+
+        # create the c-_apriltag_detector object
         self.tag_detector_ptr = self.libc.apriltag_detector_create()
 
         # create the family
-        self.libc.apriltag_detector_add_family_bits.restype = None
         self.tag_families = dict()
         if 'tag16h5' in self.params['families']:
-            self.libc.tag16h5_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tag16h5'] = self.libc.tag16h5_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tag16h5'], 2)
         elif 'tag25h9' in self.params['families']:
-            self.libc.tag25h9_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tag25h9'] = self.libc.tag25h9_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tag25h9'], 2)
         elif 'tag36h11' in self.params['families']:
-            self.libc.tag36h11_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tag36h11'] = self.libc.tag36h11_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tag36h11'], 2)
         elif 'tagCircle21h7' in self.params['families']:
-            self.libc.tagCircle21h7_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagCircle21h7'] = self.libc.tagCircle21h7_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tagCircle21h7'], 2)
         elif 'tagCircle49h12' in self.params['families']:
-            self.libc.tagCircle49h12_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagCircle49h12'] = self.libc.tagCircle49h12_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tagCircle49h12'], 2)
         elif 'tagCustom48h12' in self.params['families']:
-            self.libc.tagCustom48h12_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagCustom48h12'] = self.libc.tagCustom48h12_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tagCustom48h12'], 2)
         elif 'tagStandard41h12' in self.params['families']:
-            self.libc.tagStandard41h12_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagStandard41h12'] = self.libc.tagStandard41h12_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tagStandard41h12'], 2)
         elif 'tagStandard52h13' in self.params['families']:
-            self.libc.tagStandard52h13_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagStandard52h13'] = self.libc.tagStandard52h13_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
                                                         self.tag_families['tagStandard52h13'], 2)
@@ -319,32 +328,23 @@ class Detector(object):
             # destroy the tag families
             for family, tf in self.tag_families.items():
                 if 'tag16h5' == family:
-                    self.libc.tag16h5_destroy.restype = None
                     self.libc.tag16h5_destroy(tf)
                 elif 'tag25h9' == family:
-                    self.libc.tag25h9_destroy.restype = None
                     self.libc.tag25h9_destroy(tf)
                 elif 'tag36h11' == family:
-                    self.libc.tag36h11_destroy.restype = None
                     self.libc.tag36h11_destroy(tf)
                 elif 'tagCircle21h7' == family:
-                    self.libc.tagCircle21h7_destroy.restype = None
                     self.libc.tagCircle21h7_destroy(tf)
                 elif 'tagCircle49h12' == family:
-                    self.libc.tagCircle49h12_destroy.restype = None
                     self.libc.tagCircle49h12_destroy(tf)
                 elif 'tagCustom48h12' == family:
-                    self.libc.tagCustom48h12_destroy.restype = None
                     self.libc.tagCustom48h12_destroy(tf)
                 elif 'tagStandard41h12' == family:
-                    self.libc.tagStandard41h12_destroy.restype = None
                     self.libc.tagStandard41h12_destroy(tf)
                 elif 'tagStandard52h13' == family:
-                    self.libc.tagStandard52h13_destroy.restype = None
                     self.libc.tagStandard52h13_destroy(tf)
 
             # destroy the detector
-            self.libc.apriltag_detector_destroy.restype = None
             self.libc.apriltag_detector_destroy(self.tag_detector_ptr)
 
     def detect(self, img, estimate_tag_pose=False, camera_params=None, tag_size=None):
@@ -355,13 +355,12 @@ class Detector(object):
         assert len(img.shape) == 2
         assert img.dtype == numpy.uint8
 
-        c_img = self._convert_image(img)
+        c_img = _ImageU8(height=img.shape[0], width=img.shape[1], stride=img.strides[0], buf=img.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)))
 
         return_info = []
 
         # detect apriltags in the image
-        self.libc.apriltag_detector_detect.restype = ctypes.POINTER(_ZArray)
-        detections = self.libc.apriltag_detector_detect(self.tag_detector_ptr, c_img)
+        detections = self.libc.apriltag_detector_detect(self.tag_detector_ptr, ctypes.byref(c_img))
 
         apriltag = ctypes.POINTER(_ApriltagDetection)()
 
@@ -404,43 +403,19 @@ class Detector(object):
                                               cy=camera_cy)
                 pose = _ApriltagPose()
 
-                self.libc.estimate_tag_pose.restype = ctypes.c_double
                 err = self.libc.estimate_tag_pose(ctypes.byref(info), ctypes.byref(pose))
 
                 detection.pose_R = _matd_get_array(pose.R).copy()
                 detection.pose_t = _matd_get_array(pose.t).copy()
                 detection.pose_err = err
 
-                self.libc.matd_destroy.restype = None
                 self.libc.matd_destroy(pose.R)
 
-                self.libc.matd_destroy.restype = None
                 self.libc.matd_destroy(pose.t)
 
             # append this dict to the tag data array
             return_info.append(detection)
 
-        self.libc.image_u8_destroy.restype = None
-        self.libc.image_u8_destroy(c_img)
-
-        self.libc.apriltag_detections_destroy.restype = None
         self.libc.apriltag_detections_destroy(detections)
 
         return return_info
-
-    def _convert_image(self, img):
-        height = img.shape[0]
-        width = img.shape[1]
-
-        self.libc.image_u8_create.restype = ctypes.POINTER(_ImageU8)
-        c_img = self.libc.image_u8_create(width, height)
-
-        tmp = _image_u8_get_array(c_img)
-
-        # copy the opencv image into the destination array, accounting for the
-        # difference between stride & width.
-        tmp[:, :width] = img
-
-        # tmp goes out of scope here but we don't care because
-        # the underlying data is still in c_img.
-        return c_img
