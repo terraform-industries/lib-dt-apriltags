@@ -1,3 +1,4 @@
 [submodule "apriltags"]
 	path = apriltags
-	url = https://github.com/bouk/apriltag/
+	url = https://github.com/bouk/apriltag.git
+	branch = optimized
