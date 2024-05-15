@@ -206,6 +206,8 @@ class Detector(object):
     searchpath: Where to look for the Apriltag 3 library, must be a list, default: ['apriltags']
 
     debug: If 1, will save debug images. Runs very slow, default: 0
+
+    hamming: Hamming distance to initialize tag families with, default: 2
     """
 
     def __init__(self,
@@ -216,6 +218,7 @@ class Detector(object):
                  refine_edges=1,
                  decode_sharpening=0.25,
                  debug=0,
+                 hamming=2,
                  searchpath=['apriltags', '.', dir_path]):
 
         # Parse the parameters
@@ -267,42 +270,42 @@ class Detector(object):
             self.libc.tag16h5_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tag16h5'] = self.libc.tag16h5_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tag16h5'], 2)
+                                                        self.tag_families['tag16h5'], hamming)
         elif 'tag25h9' in self.params['families']:
             self.libc.tag25h9_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tag25h9'] = self.libc.tag25h9_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tag25h9'], 2)
+                                                        self.tag_families['tag25h9'], hamming)
         elif 'tag36h11' in self.params['families']:
             self.libc.tag36h11_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tag36h11'] = self.libc.tag36h11_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tag36h11'], 2)
+                                                        self.tag_families['tag36h11'], hamming)
         elif 'tagCircle21h7' in self.params['families']:
             self.libc.tagCircle21h7_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagCircle21h7'] = self.libc.tagCircle21h7_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tagCircle21h7'], 2)
+                                                        self.tag_families['tagCircle21h7'], hamming)
         elif 'tagCircle49h12' in self.params['families']:
             self.libc.tagCircle49h12_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagCircle49h12'] = self.libc.tagCircle49h12_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tagCircle49h12'], 2)
+                                                        self.tag_families['tagCircle49h12'], hamming)
         elif 'tagCustom48h12' in self.params['families']:
             self.libc.tagCustom48h12_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagCustom48h12'] = self.libc.tagCustom48h12_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tagCustom48h12'], 2)
+                                                        self.tag_families['tagCustom48h12'], hamming)
         elif 'tagStandard41h12' in self.params['families']:
             self.libc.tagStandard41h12_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagStandard41h12'] = self.libc.tagStandard41h12_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tagStandard41h12'], 2)
+                                                        self.tag_families['tagStandard41h12'], hamming)
         elif 'tagStandard52h13' in self.params['families']:
             self.libc.tagStandard52h13_create.restype = ctypes.POINTER(_ApriltagFamily)
             self.tag_families['tagStandard52h13'] = self.libc.tagStandard52h13_create()
             self.libc.apriltag_detector_add_family_bits(self.tag_detector_ptr,
-                                                        self.tag_families['tagStandard52h13'], 2)
+                                                        self.tag_families['tagStandard52h13'], hamming)
         else:
             raise Exception('Unrecognized tag family name. Use e.g. \'tag36h11\'.\n')
 
